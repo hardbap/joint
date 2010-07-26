@@ -305,7 +305,7 @@ class JointTest < Test::Unit::TestCase
     end
   end
 
-  context "Using an custom collection" do
+  context "Using an alternate collection" do
     setup do
       @joint_collection_name = 'assets'
       Asset.joint_collection_name = @joint_collection_name
