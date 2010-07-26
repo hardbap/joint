@@ -6,8 +6,9 @@ module Joint
   autoload :Version, 'joint/version'
 
   def self.configure(model)
-    model.class_inheritable_accessor :attachment_names
+    model.class_inheritable_accessor :attachment_names, :joint_collection_name
     model.attachment_names = Set.new
+    model.joint_collection_name = 'fs'
   end
 
   module ClassMethods
@@ -45,11 +46,15 @@ module Joint
         end
       EOC
     end
+
+    def set_joint_collection(name)
+      self.joint_collection_name = name
+    end
   end
 
   module InstanceMethods
     def grid
-      @grid ||= Mongo::Grid.new(database)
+      @grid ||= Mongo::Grid.new(database, joint_collection_name)
     end
 
     private

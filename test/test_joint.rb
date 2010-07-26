@@ -12,11 +12,17 @@ end
 class BaseModel
   include MongoMapper::Document
   plugin Joint
+
+  set_joint_collection 'base_attachments'
   attachment :file
 end
 
 class Image < BaseModel; attachment :image end
-class Video < BaseModel; attachment :video end
+
+class Video < BaseModel
+  set_joint_collection 'video_attachments'
+  attachment :video 
+end
 
 module JointTestHelpers
   def all_files
@@ -31,8 +37,9 @@ module JointTestHelpers
     File.open(File.join(File.dirname(__FILE__), 'fixtures', name), 'r')
   end
 
-  def grid
-    @grid ||= Mongo::Grid.new(MongoMapper.database)
+  def grid(collection_name = 'fs')
+    @grids ||= Hash.new
+    @grids[collection_name] ||= Mongo::Grid.new(MongoMapper.database, collection_name)
   end
   
   def key_names
@@ -68,6 +75,14 @@ class JointTest < Test::Unit::TestCase
       end
     end
 
+    should "have a default joint collection name" do
+      Asset.joint_collection_name.should == 'fs'
+    end
+
+    should "set the joint collection name" do
+      BaseModel.joint_collection_name.should == 'base_attachments'
+    end
+
     context "with inheritance" do
       should "add attachment to attachment_names" do
         BaseModel.attachment_names.should == Set.new([:file])
@@ -86,6 +101,14 @@ class JointTest < Test::Unit::TestCase
           Video.keys.should     include("file_#{key}")
           Video.keys.should     include("video_#{key}")
         end
+      end
+      
+      should "inherit the joint collection name from superclass" do
+        Image.joint_collection_name.should == 'base_attachments'
+      end
+      
+      should "set the joint collection name" do
+        Video.joint_collection_name.should == 'video_attachments'
       end
     end
   end
@@ -281,4 +304,23 @@ class JointTest < Test::Unit::TestCase
       assert_equal 'testing.txt', doc.image_name
     end
   end
+
+  context "Using an custom collection" do
+    setup do
+      @joint_collection_name = 'assets'
+      Asset.joint_collection_name = @joint_collection_name
+
+      @doc = Asset.create(:image => @image, :file => @file)
+      rewind_files
+    end
+  
+    should "save attachments in the alternate collection" do
+      assert_raises(Mongo::GridFileNotFound) { grid('fs').get(@doc.image_id) }
+      assert_raises(Mongo::GridFileNotFound) { grid('fs').get(@doc.file_id) }
+      
+      grid(@joint_collection_name).get(@doc.image_id).should_not be_nil
+      grid(@joint_collection_name).get(@doc.file_id).should_not be_nil
+    end
+  end
+  
 end
