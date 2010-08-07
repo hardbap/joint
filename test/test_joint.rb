@@ -13,14 +13,14 @@ class BaseModel
   include MongoMapper::Document
   plugin Joint
 
-  set_joint_collection 'base_attachments'
+  set_joint_collection :base_attachments
   attachment :file
 end
 
 class Image < BaseModel; attachment :image end
 
 class Video < BaseModel
-  set_joint_collection 'video_attachments'
+  set_joint_collection :video_attachments
   attachment :video 
 end
 
