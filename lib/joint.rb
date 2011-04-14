@@ -76,6 +76,7 @@ module Joint
             :_id          => send(name).id,
             :filename     => send(name).name,
             :content_type => send(name).type,
+            :safe         => send(name).safe?
           })
         end
         assigned_attachments.clear
@@ -110,6 +111,10 @@ module Joint
 
     def type
       @instance.send("#{@name}_type")
+    end
+
+    def safe?
+      @instance.send(:class).safe?
     end
 
     def grid_io

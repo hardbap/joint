@@ -9,6 +9,10 @@ class Asset
   attachment :file
 end
 
+class SafeAsset < Asset
+  safe
+end
+
 class BaseModel
   include MongoMapper::Document
   plugin Joint
@@ -81,6 +85,20 @@ class JointTest < Test::Unit::TestCase
 
     should "set the joint collection name" do
       BaseModel.joint_collection_name.should == 'base_attachments'
+    end
+
+    should "respect the model's safe option setting" do
+      unsafe_doc = Asset.new(:image => @image, :file => @file)
+      rewind_files
+      Mongo::Grid.any_instance.expects(:put).twice.with(anything, has_entries(:safe => false))
+
+      unsafe_doc.save
+
+      safe_doc = SafeAsset.new(:image => @image, :file => @file)
+      rewind_files
+      Mongo::Grid.any_instance.expects(:put).twice.with(anything, has_entries(:safe => true))
+
+      safe_doc.save
     end
 
     context "with inheritance" do
