@@ -21,7 +21,7 @@ class Image < BaseModel; attachment :image end
 
 class Video < BaseModel
   set_joint_collection :video_attachments
-  attachment :video 
+  attachment :video
 end
 
 module JointTestHelpers
@@ -41,7 +41,7 @@ module JointTestHelpers
     @grids ||= Hash.new
     @grids[collection_name] ||= Mongo::Grid.new(MongoMapper.database, collection_name)
   end
-  
+
   def key_names
     [:id, :name, :type, :size]
   end
@@ -102,11 +102,11 @@ class JointTest < Test::Unit::TestCase
           Video.keys.should     include("video_#{key}")
         end
       end
-      
+
       should "inherit the joint collection name from superclass" do
         Image.joint_collection_name.should == 'base_attachments'
       end
-      
+
       should "set the joint collection name" do
         Video.joint_collection_name.should == 'video_attachments'
       end
@@ -135,8 +135,8 @@ class JointTest < Test::Unit::TestCase
       subject.image_id.should_not be_nil
       subject.file_id.should_not be_nil
 
-      subject.image_id.should be_instance_of(BSON::ObjectID)
-      subject.file_id.should be_instance_of(BSON::ObjectID)
+      subject.image_id.should be_instance_of(BSON::ObjectId)
+      subject.file_id.should be_instance_of(BSON::ObjectId)
     end
 
     should "allow accessing keys through attachment proxy" do
@@ -149,8 +149,8 @@ class JointTest < Test::Unit::TestCase
       subject.image.id.should_not be_nil
       subject.file.id.should_not be_nil
 
-      subject.image.id.should be_instance_of(BSON::ObjectID)
-      subject.file.id.should be_instance_of(BSON::ObjectID)
+      subject.image.id.should be_instance_of(BSON::ObjectId)
+      subject.file.id.should be_instance_of(BSON::ObjectId)
     end
 
     should "proxy unknown methods to GridIO object" do
@@ -313,14 +313,14 @@ class JointTest < Test::Unit::TestCase
       @doc = Asset.create(:image => @image, :file => @file)
       rewind_files
     end
-  
+
     should "save attachments in the alternate collection" do
       assert_raises(Mongo::GridFileNotFound) { grid('fs').get(@doc.image_id) }
       assert_raises(Mongo::GridFileNotFound) { grid('fs').get(@doc.file_id) }
-      
+
       grid(@joint_collection_name).get(@doc.image_id).should_not be_nil
       grid(@joint_collection_name).get(@doc.file_id).should_not be_nil
     end
   end
-  
+
 end
